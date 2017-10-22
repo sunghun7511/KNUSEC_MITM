@@ -60,6 +60,7 @@ public class ARPSpoofing {
 				
 				Main.gui.appendLog("Detect router! : " + Utils.IPToString(routerIP) + "(" + Utils.bytesToString(routerMac) + ")");
 			}else {
+				Device d = new Device(arp.getSenderMac(), arp.getSenderIP());
 				
 			}
 		}

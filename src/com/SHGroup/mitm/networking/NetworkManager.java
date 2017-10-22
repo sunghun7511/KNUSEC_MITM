@@ -12,7 +12,9 @@ import com.SHGroup.mitm.networking.packets.AbstractPacket;
 
 public class NetworkManager {
 	private boolean isInit = false;
-
+	
+	private final ArrayList<Device> devices = new ArrayList<>();
+	
 	private Pcap pcap;
 	private PcapIf device;
 
@@ -55,6 +57,26 @@ public class NetworkManager {
 		return pcap;
 	}
 	
+	public int getDevicesSize() {
+		return devices.size();
+	}
+	
+	public Device[] getDevices() {
+		return devices.toArray(new Device[] {});
+	}
+	
+	public Device getDevice(int index) {
+		if(index < 0 || index >= devices.size()) {
+			return null;
+		}
+		return devices.get(index);
+	}
+	
+	public int addDevice(Device device) {
+		devices.add(device);
+		return devices.size() - 1;
+	}
+	
 	public ArrayList<String> getNetworkDevices() {
 		ArrayList<PcapIf> allDevices = new ArrayList<>();
 		StringBuilder err = new StringBuilder();
@@ -83,11 +105,13 @@ public class NetworkManager {
 
 	public ArrayList<String> getARPTargetDevices() {
 		if(!arpspoof.isSet()) {
-			System.out.println("INIT ARP");
 			arpspoof.initArpSpoofing();
-			System.out.println("INIT ARP FINISH");
 		}
 		ArrayList<String> devices = new ArrayList<>();
+		
+		for(Device d : this.devices) {
+			devices.add(d.getNickName());
+		}
 		
 		return devices;
 	}
