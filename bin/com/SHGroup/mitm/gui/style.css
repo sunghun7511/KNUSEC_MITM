@@ -1,0 +1,21 @@
+#mainPane {
+	-fx-background-color: gray;
+}
+
+#listview {
+	-fx-background-color: darkslategray;
+}
+
+#console, #input {
+	-fx-padding: 5;
+	-fx-background-color: black;
+	-fx-text-fill: lime;
+	
+	-jfx-unfocus-color: gray;
+	-jfx-focus-color: darkgray;
+}
+
+#network_devices, #arp_spoofing {
+	-fx-background-color: slategray;
+	-fx-text-fill: white;
+}

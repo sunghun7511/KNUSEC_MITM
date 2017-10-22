@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.*?>
+
+<?import java.lang.*?>
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import java.util.*?>
+
+<?import javafx.collections.*?>
+<?import javafx.embed.swing.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.paint.*?>
+
+<AnchorPane id="mainPane" maxHeight="720.0" maxWidth="1280.0"
+	minHeight="720.0" minWidth="1280.0" prefHeight="720.0" prefWidth="1280.0"
+	xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.SHGroup.mitm.gui.SceneController">
+	<children>
+		<JFXScrollPane prefHeight="690.0" prefWidth="240.0">
+			<children>
+				<JFXListView id="listview" fx:id="listview">
+					<items>
+						<FXCollections fx:factory="observableArrayList" />
+					</items>
+				</JFXListView>
+			</children>
+		</JFXScrollPane>
+		<JFXScrollPane layoutX="240.0" layoutY="550.0"
+			prefHeight="140.0" prefWidth="1040.0">
+			<children>
+				<JFXTextArea id="console" fx:id="consolePane" editable="false"
+					prefHeight="140.0" prefWidth="1040.0" />
+			</children>
+		</JFXScrollPane>
+
+		<JFXTextField id="input" fx:id="consoleInput" layoutX="240.0"
+			layoutY="690.0" prefHeight="28.0" prefWidth="1040.0" />
+
+		<SwingNode fx:id="graphPane" />
+
+		<JFXButton id="network_devices" fx:id="network_devices"
+			onAction="#loadNetworkDevices" layoutY="690.0" prefHeight="28.0"
+			prefWidth="120.0" text="Network Devices" />
+
+		<JFXButton id="arp_spoofing" fx:id="arp_spoofing" disable="true"
+			onAction="#loadARPTargetDevices" layoutX="120.0" layoutY="690.0"
+			prefHeight="28.0" prefWidth="120.0" text="ARP Spoofing" />
+	</children>
+</AnchorPane>
