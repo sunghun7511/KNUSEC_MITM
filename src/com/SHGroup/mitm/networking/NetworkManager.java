@@ -52,7 +52,7 @@ public class NetworkManager {
 	public ArrayList<String> getNetworkDevices() {
 		ArrayList<PcapIf> allDevices = new ArrayList<>();
 		StringBuilder err = new StringBuilder();
-
+		
 		int res = Pcap.findAllDevs(allDevices, err);
 		if (res == Pcap.NOT_OK || allDevices.isEmpty()) {
 			Main.gui.appendLog("Cannot loads network devices..");
@@ -77,7 +77,9 @@ public class NetworkManager {
 
 	public ArrayList<String> getARPTargetDevices() {
 		if(!arpspoof.isSet()) {
+			System.out.println("INIT ARP");
 			arpspoof.initArpSpoofing();
+			System.out.println("INIT ARP FINISH");
 		}
 		ArrayList<String> devices = new ArrayList<>();
 		

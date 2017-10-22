@@ -23,6 +23,15 @@ public class Utils {
 		return builder.toString();
 	}
 
+	public final static String IPToString(byte[] ip) {
+		if (ip.length != 4) {
+			return "";
+		}
+		return new StringBuilder().append(Integer.toString(ip[0] & 0xff)).append(".")
+				.append(Integer.toString(ip[1] & 0xff)).append(".").append(Integer.toString(ip[2] & 0xff)).append(".")
+				.append(Integer.toString(ip[3] & 0xff)).toString();
+	}
+
 	public final static int copy(byte[] src, byte[] dest) {
 		if (src.length > dest.length) {
 			return 0;

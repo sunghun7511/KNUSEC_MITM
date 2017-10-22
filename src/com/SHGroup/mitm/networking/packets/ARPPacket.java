@@ -3,16 +3,23 @@ package com.SHGroup.mitm.networking.packets;
 import com.SHGroup.mitm.Utils;
 
 public class ARPPacket extends AbstractPacket {
+	public ARPPacket(byte[] packet) throws InvalidPacketException {
+		super(packet);
+		if(packet.length < 42) {
+			throw new InvalidPacketException("need at least 42 bytes.");
+		}
+	}
+	
+	public ARPPacket() {
+		super((byte)0x08, (byte)0x06);
+	}
 
-	private byte[] destMac = new byte[6];
-	private byte[] srcMac = new byte[6];
-
-	private byte[] ethernetType = new byte[] { 0x08, 0x06 }; // ARP
-	private byte[] hardwareType = new byte[] { 0x00, 0x01 }; // Ethernet
-	private byte[] protocolType = new byte[] { 0x08, 0x00 }; // IPv4
-	private byte hardwareSize = 0x06; // Mac Size
-	private byte protocolSize = 0x04; // IP Size
-
+	protected byte[] hardwareType = new byte[] { 0x00, 0x01 }; // Ethernet
+	protected byte[] protocolType = new byte[] { 0x08, 0x00 }; // IPv4
+	
+	protected byte hardwareSize = 0x06; // Hardware Size(MAC)
+	protected byte protocolSize = 0x04; // Protocol Size(IP)
+	
 	private byte[] opcode = new byte[2]; // Reply or Request
 
 	private byte[] senderMac = new byte[6];
@@ -25,11 +32,9 @@ public class ARPPacket extends AbstractPacket {
 	public byte[] generatePacket() {
 		int index = 0;
 		byte[] packet = new byte[42];
-
-		index += Utils.copy(destMac, packet, index);
-		index += Utils.copy(srcMac, packet, index);
-
-		index += Utils.copy(ethernetType, packet, index);
+		
+		index += Utils.copy(super.generatePacket(), packet, index);
+		
 		index += Utils.copy(hardwareType, packet, index);
 		index += Utils.copy(protocolType, packet, index);
 

@@ -4,6 +4,8 @@ import com.SHGroup.mitm.command.CommandHandler;
 import com.SHGroup.mitm.gui.MainGUIApplication;
 import com.SHGroup.mitm.networking.NetworkManager;
 
+import javafx.application.Platform;
+
 public class Main extends Thread{
 	public static void main(String[] args) {
 		new Main().start();
@@ -41,5 +43,8 @@ public class Main extends Thread{
 
 	public static final void runOnNetworkingThread(Runnable runnable) {
 		network.getThread().appendWork(runnable);
+	}
+	public static final void runOnGUIThread(Runnable runnable) {
+		Platform.runLater(runnable);
 	}
 }

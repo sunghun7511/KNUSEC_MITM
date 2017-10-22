@@ -12,14 +12,13 @@ import com.jfoenix.controls.JFXListView;
 import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.embed.swing.SwingNode;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -57,13 +56,21 @@ public class SceneController implements Initializable {
 	private final SimpleDateFormat sdf = new SimpleDateFormat("[yyyyMMdd-hhmmss] ");
 
 	public void appendLog(Object o) {
-		consolePane.appendText(sdf.format(new Date()) + o.toString() + "\n");
-		consolePane.setScrollTop(consolePane.getScrollTop());
+		Main.runOnGUIThread(new Runnable() {
+			@Override
+			public void run() {
+				consolePane.appendText(sdf.format(new Date()) + o.toString() + "\n");
+				consolePane.setScrollTop(consolePane.getScrollTop());
+			}
+		});
 	}
+
+	private GUIThread gThread;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		Main.gui.setController(this);
+		new Thread(gThread = new GUIThread()).start();
 
 		listview.setOnMouseClicked(new EventHandler<MouseEvent>() {
 			@Override
@@ -101,18 +108,7 @@ public class SceneController implements Initializable {
 			}
 		});
 
-		Task<Void> task = new Task<Void>() {
-			private boolean b = true;
-			@Override
-			protected Void call() throws Exception {
-				while(b) {
-					
-				}
-				return null;
-			}
-		};
 		loadNetworkDevices();
-		new Thread(task).start();
 	}
 
 	private int mode = 0;
@@ -120,6 +116,13 @@ public class SceneController implements Initializable {
 	public int getMode() {
 		return mode;
 	}
+
+	public GUIThread getThread() {
+		while(gThread == null) {}
+		return gThread;
+	}
+
+	private ArrayList<String> templist;
 
 	public void loadNetworkDevices() {
 
@@ -130,18 +133,24 @@ public class SceneController implements Initializable {
 		Main.runOnNetworkingThread(new Runnable() {
 			@Override
 			public void run() {
-				ArrayList<String> list = Main.network.getNetworkDevices();
-				listItems.clear();
+				templist = Main.network.getNetworkDevices();
+				Main.runOnGUIThread(new Runnable() {
+					@Override
+					public void run() {
+						listItems.clear();
 
-				for (String n : list) {
-					listItems.add(n);
-				}
+						for (String n : templist) {
+							listItems.add(n);
+						}
 
-				applyListItems();
-				mode = 0;
-				network_devices.setDisable(false);
-				arp_spoofing.setDisable(false);
-				listview.setDisable(false);
+						applyListItems();
+						mode = 0;
+						
+						network_devices.setDisable(false);
+						arp_spoofing.setDisable(false);
+						listview.setDisable(false);
+					}
+				});
 			}
 		});
 	}
@@ -152,27 +161,36 @@ public class SceneController implements Initializable {
 		arp_spoofing.setDisable(true);
 		listview.setDisable(true);
 
-		Main.runOnNetworkingThread(new Runnable() {
-			@Override
-			public void run() {
-				if (Main.network.getPcap() != null) {
-					ArrayList<String> list = Main.network.getARPTargetDevices();
-					listItems.clear();
-
-					for (String n : list) {
-						listItems.add(n);
-					}
-
-					applyListItems();
-					mode = 1;
-				} else {
-					Main.gui.appendLog("Please select network device first..");
+		if (Main.network.getPcap() != null) {
+			Main.runOnNetworkingThread(new Runnable() {
+				@Override
+				public void run() {
+					templist = Main.network.getARPTargetDevices();
+					Main.runOnGUIThread(new Runnable() {
+						@Override
+						public void run() {
+							listItems.clear();
+		
+							for (String n : templist) {
+								listItems.add(n);
+							}
+							
+							applyListItems();
+							mode = 1;
+							
+							network_devices.setDisable(false);
+							arp_spoofing.setDisable(false);
+							listview.setDisable(false);
+						}
+					});
 				}
-
-				network_devices.setDisable(false);
-				arp_spoofing.setDisable(false);
-				listview.setDisable(false);
-			}
-		});
+			});
+		} else {
+			Main.gui.appendLog("Please select network device first..");
+			
+			network_devices.setDisable(false);
+			arp_spoofing.setDisable(false);
+			listview.setDisable(false);
+		}
 	}
 }

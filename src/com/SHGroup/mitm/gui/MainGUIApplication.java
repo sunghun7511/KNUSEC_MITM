@@ -81,4 +81,8 @@ public class MainGUIApplication extends Application {
 		getController().appendLog(o);
 	}
 
+	public GUIThread getThread() {
+		return getController().getThread();
+	}
+
 }
