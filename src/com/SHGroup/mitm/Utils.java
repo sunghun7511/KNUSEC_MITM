@@ -18,7 +18,7 @@ public class Utils {
 	public final static String bytesToString(byte[] arr, int linefeed) {
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < arr.length;) {
-			builder.append(String.format("%02x", arr[0] & 0xff)).append(++i % linefeed == 0 ? "\n" : " ");
+			builder.append(String.format("%02x", arr[i] & 0xff)).append(++i % linefeed == 0 ? "\n" : " ");
 		}
 		return builder.toString();
 	}
@@ -36,25 +36,46 @@ public class Utils {
 		if (src.length > dest.length) {
 			return 0;
 		}
-		return copy(src, dest, 0);
+		return copy(src, 0, dest, 0, dest.length);
+	}
+	
+	public final static int copy(byte[] src, int srcstart, byte[] dest, int deststart) {
+		if (deststart < 0 || srcstart < 0) {
+			return 0;
+		}
+		return copy(src, srcstart, dest, deststart, Math.min(src.length - srcstart, dest.length - deststart));
+	}
+	
+	public final static int copy(byte[] src, byte[] dest, int deststart) {
+		if (deststart < 0) {
+			return 0;
+		}
+		if (dest.length - deststart < src.length) {
+			return 0;
+		}
+		return copy(src, 0, dest, deststart, src.length);
 	}
 
-	public final static int copy(byte[] src, byte[] dest, int start) {
-		if (src.length + start > dest.length) {
+	public final static int copy(byte[] src, byte[] dest, int deststart, int amount) {
+		if (deststart < 0 || amount < 1) {
 			return 0;
 		}
-		return copy(src, dest, start, src.length);
+		if (deststart + amount > dest.length) {
+			return 0;
+		}
+		if (amount > src.length) {
+			return 0;
+		}
+		return copy(src, 0, dest, deststart, amount);
 	}
 
-	public final static int copy(byte[] src, byte[] dest, int start, int amount) {
-		if (src.length + start > dest.length) {
+	public final static int copy(byte[] src, int srcstart, byte[] dest, int deststart, int amount) {
+		if (deststart < 0 || srcstart < 0 || amount < 1 || amount > dest.length - deststart
+				|| srcstart + amount > src.length) {
 			return 0;
 		}
-		if (amount >= dest.length) {
-			return 0;
-		}
-		for (int i = start; i < amount; i++) {
-			dest[i] = src[i];
+		for (int i = 0; i < amount; i++) {
+			dest[deststart + i] = src[srcstart + i];
 		}
 		return amount;
 	}

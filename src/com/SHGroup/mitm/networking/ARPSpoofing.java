@@ -38,16 +38,30 @@ public class ARPSpoofing {
 					while (ee.hasMoreElements()) {
 						InetAddress inet = (InetAddress) ee.nextElement();
 						if (inet instanceof Inet4Address) {
-							System.out.println(inet.getHostAddress());
 							Main.gui.appendLog("IP auto detect : " + inet.getHostAddress());
 							localIP = inet.getAddress();
+							routerIP = new byte[] { localIP[0], localIP[1], localIP[2], 1 };
 						}
 					}
 				}
 			}
+			sendARPRequest();
 			isSet = true;
 		} catch (Exception ex) {
 			ex.printStackTrace();
+		}
+	}
+
+	public void responseARPReply(ARPPacket arp) {
+		if (arp.getOpcode()[0] == 0x00 && arp.getOpcode()[1] == 0x02) { // reply packet
+			if(arp.getSenderIP()[3] == 1) {
+				routerIP = arp.getSenderIP();
+				routerMac = arp.getSenderMac();
+				
+				Main.gui.appendLog("Detect router! : " + Utils.IPToString(routerIP) + "(" + Utils.bytesToString(routerMac) + ")");
+			}else {
+				
+			}
 		}
 	}
 
@@ -57,33 +71,23 @@ public class ARPSpoofing {
 			// hard coding broadcasting.. haha
 			// some hard coding makes speed faster
 
-//			for (byte i = 0; i < 256; i++) {
-//				if (i == localIP[3]) {
-//					continue;
-//				}
-//				byte[] target = new byte[] { localIP[0], localIP[1], localIP[2], i };
-//				ARPPacket arp = ARPPacket.generateARPRequstPacket(localMac, localIP, target);
-//
-//				int isOk = Main.network.getPcap().sendPacket(arp.generatePacket());
-//				if (isOk != Pcap.OK) {
-//					Main.gui.appendLog("Error on broadcasting..");
-//					Main.gui.appendLog(" Cause : " + Main.network.getPcap().getErr());
-//				}
-//				System.out.println(Utils.IPToString(target));
-//				Main.gui.appendLog("Send arp request to " + Utils.IPToString(target) + "..");
-//			}
-			final byte ff = (byte) 0xff;
-			byte[] target = new byte[] {ff, ff, ff, ff};
-			ARPPacket arp = ARPPacket.generateARPRequstPacket(localMac, localIP, target);
+			for (int i = 1; i < 256; i++) {
+				byte[] target = new byte[] { localIP[0], localIP[1], localIP[2], (byte) i };
+				if (i == localIP[3]) {
+					Main.gui.appendLog("Not send arp request to " + Utils.IPToString(target) + " because it is me..");
+					continue;
+				}
+				ARPPacket arp = ARPPacket.generateARPRequstPacket(localMac, localIP, target);
 
-			int isOk = Main.network.getPcap().sendPacket(arp.generatePacket());
-			if (isOk != Pcap.OK) {
-				Main.gui.appendLog("Error on broadcasting..");
-				Main.gui.appendLog(" Cause : " + Main.network.getPcap().getErr());
+				int isOk = Main.network.getPcap().sendPacket(arp.generatePacket());
+				if (isOk != Pcap.OK) {
+					Main.gui.appendLog("Error on broadcasting..");
+					Main.gui.appendLog(" Cause : " + Main.network.getPcap().getErr());
+					continue;
+				}
+				if (i % 50 == 0)
+					Main.gui.appendLog("Send arp request to " + Utils.IPToString(target) + "..");
 			}
-			System.out.println(Utils.IPToString(target));
-			Main.gui.appendLog("Send arp request to " + Utils.IPToString(target) + "..");
-
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

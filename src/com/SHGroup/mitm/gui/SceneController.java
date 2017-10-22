@@ -12,7 +12,6 @@ import com.jfoenix.controls.JFXListView;
 import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
 
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingNode;
@@ -65,12 +64,9 @@ public class SceneController implements Initializable {
 		});
 	}
 
-	private GUIThread gThread;
-
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		Main.gui.setController(this);
-		new Thread(gThread = new GUIThread()).start();
 
 		listview.setOnMouseClicked(new EventHandler<MouseEvent>() {
 			@Override
@@ -115,11 +111,6 @@ public class SceneController implements Initializable {
 
 	public int getMode() {
 		return mode;
-	}
-
-	public GUIThread getThread() {
-		while(gThread == null) {}
-		return gThread;
 	}
 
 	private ArrayList<String> templist;

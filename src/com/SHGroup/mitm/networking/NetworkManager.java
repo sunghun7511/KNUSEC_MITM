@@ -7,6 +7,8 @@ import org.jnetpcap.PcapIf;
 
 import com.SHGroup.mitm.Main;
 import com.SHGroup.mitm.Utils;
+import com.SHGroup.mitm.networking.packets.ARPPacket;
+import com.SHGroup.mitm.networking.packets.AbstractPacket;
 
 public class NetworkManager {
 	private boolean isInit = false;
@@ -20,6 +22,7 @@ public class NetworkManager {
 	private ARPSpoofing arpspoof;
 	
 	private NetworkThread nTherad;
+	private PacketCaptureThread pCaptureThread;
 
 	public void initialize() {
 		if (isInit)
@@ -29,6 +32,9 @@ public class NetworkManager {
 		nTherad = new NetworkThread();
 		nTherad.setDaemon(true);
 		nTherad.start();
+		
+		pCaptureThread = new PacketCaptureThread();
+		pCaptureThread.setDaemon(true);
 		
 		arpspoof = new ARPSpoofing();
 	}
@@ -70,7 +76,7 @@ public class NetworkManager {
 			Main.gui.appendLog(" [ " + Integer.toString(i + 1) + " ] " + Utils.getName(pci));
 			lastDevices.add(name);
 		}
-
+		
 		this.allDevices = allDevices;
 		return lastDevices;
 	}
@@ -108,7 +114,15 @@ public class NetworkManager {
 			return false;
 		}
 
+		pCaptureThread.start();
+		
 		Main.gui.appendLog("Success select network card! : " + Utils.getName(device));
 		return true;
+	}
+
+	public void dispatchPacket(AbstractPacket abp) {
+		if(abp instanceof ARPPacket) {
+			arpspoof.responseARPReply((ARPPacket) abp);
+		}
 	}
 }

@@ -80,9 +80,4 @@ public class MainGUIApplication extends Application {
 		while(getController() == null) {}
 		getController().appendLog(o);
 	}
-
-	public GUIThread getThread() {
-		return getController().getThread();
-	}
-
 }
