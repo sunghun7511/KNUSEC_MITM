@@ -85,7 +85,7 @@ public class SceneController implements Initializable {
 								Main.network.selectNetworkCard(select.get(0));
 								Main.gui.getController().loadARPTargetDevices();
 							} else if (mode == 1) {
-
+								
 							}
 							listview.setDisable(false);
 						}
@@ -125,15 +125,17 @@ public class SceneController implements Initializable {
 			@Override
 			public void run() {
 				templist = Main.network.getNetworkDevices();
+				if(Main.network.getPcap() != null)
+					Main.network.closeNetworkCard();
 				Main.runOnGUIThread(new Runnable() {
 					@Override
 					public void run() {
 						listItems.clear();
-
+						
 						for (String n : templist) {
 							listItems.add(n);
 						}
-
+						
 						applyListItems();
 						mode = 0;
 						

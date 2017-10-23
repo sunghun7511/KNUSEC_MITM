@@ -14,6 +14,10 @@ public class Utils {
 	public final static String bytesToString(byte[] arr) {
 		return bytesToString(arr, 16);
 	}
+	
+	public final static String getIPandMACToString(byte[] ip, byte[] mac) {
+		return IPToString(ip) + "(" + bytesToString(mac) + ")";
+	}
 
 	public final static String bytesToString(byte[] arr, int linefeed) {
 		StringBuilder builder = new StringBuilder();

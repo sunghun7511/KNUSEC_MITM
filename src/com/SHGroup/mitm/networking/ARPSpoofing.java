@@ -54,14 +54,27 @@ public class ARPSpoofing {
 
 	public void responseARPReply(ARPPacket arp) {
 		if (arp.getOpcode()[0] == 0x00 && arp.getOpcode()[1] == 0x02) { // reply packet
-			if(arp.getSenderIP()[3] == 1) {
+			if (Utils.bytesToString(arp.getSenderMac()).equals(Utils.bytesToString(localMac))) {
+				Main.gui.appendLog("Send reply packet (to " + Utils.getIPandMACToString(arp.getTargetIP(), arp.getTargetMac()));
+				return;
+			}
+			if (arp.getSenderIP()[3] == 1) {
 				routerIP = arp.getSenderIP();
 				routerMac = arp.getSenderMac();
-				
-				Main.gui.appendLog("Detect router! : " + Utils.IPToString(routerIP) + "(" + Utils.bytesToString(routerMac) + ")");
-			}else {
+
+				Main.gui.appendLog(
+						"Detect router! : " + Utils.getIPandMACToString(routerIP, routerMac));
+			} else {
 				Device d = new Device(arp.getSenderMac(), arp.getSenderIP());
-				
+
+				int res = Main.network.addDevice(d);
+				if (res != -1) {
+					Main.gui.getController().loadARPTargetDevices();
+					Main.gui.appendLog("Detect device! : " + d.getNickName());
+				} else {
+					Main.gui.appendLog("Add device failed... : "
+							+ Utils.getIPandMACToString(arp.getSenderIP(), arp.getSenderMac()));
+				}
 			}
 		}
 	}
@@ -87,8 +100,9 @@ public class ARPSpoofing {
 					continue;
 				}
 				if (i % 50 == 0)
-					Main.gui.appendLog("Send arp request to " + Utils.IPToString(target) + "..");
+					Main.gui.appendLog("Send arp request (now : " + Utils.IPToString(target) + ")");
 			}
+			Main.gui.appendLog("Send arp request finish ( 1 ~ 255 )");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

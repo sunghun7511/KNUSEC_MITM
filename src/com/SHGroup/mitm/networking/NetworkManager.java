@@ -12,17 +12,17 @@ import com.SHGroup.mitm.networking.packets.AbstractPacket;
 
 public class NetworkManager {
 	private boolean isInit = false;
-	
+
 	private final ArrayList<Device> devices = new ArrayList<>();
-	
+
 	private Pcap pcap;
 	private PcapIf device;
 
 	private ArrayList<PcapIf> allDevices = null;
 	private ArrayList<String> lastDevices = null;
-	
+
 	private ARPSpoofing arpspoof;
-	
+
 	private NetworkThread nTherad;
 	private PacketCaptureThread pCaptureThread;
 
@@ -30,57 +30,82 @@ public class NetworkManager {
 		if (isInit)
 			return;
 		isInit = true;
-		
+
 		nTherad = new NetworkThread();
 		nTherad.setDaemon(true);
 		nTherad.start();
-		
+
 		pCaptureThread = new PacketCaptureThread();
 		pCaptureThread.setDaemon(true);
-		
+
 		arpspoof = new ARPSpoofing();
 	}
 
 	public void onExit() {
-		
+
 	}
-	
+
 	public NetworkThread getThread() {
 		return nTherad;
 	}
-	
+
 	public PcapIf getDevice() {
 		return device;
 	}
-	
+
 	public Pcap getPcap() {
 		return pcap;
 	}
-	
+
 	public int getDevicesSize() {
 		return devices.size();
 	}
-	
+
+	public Device getDeviceFromIP(byte[] ip) {
+		Device d = null;
+		for (Device dd : devices) {
+			if (Utils.bytesToString(dd.getIP()).equals(Utils.bytesToString(ip))) {
+				d = dd;
+				break;
+			}
+		}
+		return d;
+	}
+
+	public Device getDeviceFromMac(byte[] mac) {
+		Device d = null;
+		for (Device dd : devices) {
+			if (Utils.bytesToString(dd.getMac()).equals(Utils.bytesToString(mac))) {
+				d = dd;
+				break;
+			}
+		}
+		return d;
+	}
+
 	public Device[] getDevices() {
 		return devices.toArray(new Device[] {});
 	}
-	
+
 	public Device getDevice(int index) {
-		if(index < 0 || index >= devices.size()) {
+		if (index < 0 || index >= devices.size()) {
 			return null;
 		}
 		return devices.get(index);
 	}
-	
+
 	public int addDevice(Device device) {
+		if(getDeviceFromMac(device.getMac()) != null) {
+			return -1;
+		}
 		devices.add(device);
 		return devices.size() - 1;
 	}
-	
+
 	public ArrayList<String> getNetworkDevices() {
 		ArrayList<PcapIf> allDevices = new ArrayList<>();
 		StringBuilder err = new StringBuilder();
-		
+
 		int res = Pcap.findAllDevs(allDevices, err);
 		if (res == Pcap.NOT_OK || allDevices.isEmpty()) {
 			Main.gui.appendLog("Cannot loads network devices..");
@@ -98,22 +123,28 @@ public class NetworkManager {
 			Main.gui.appendLog(" [ " + Integer.toString(i + 1) + " ] " + Utils.getName(pci));
 			lastDevices.add(name);
 		}
-		
+
 		this.allDevices = allDevices;
 		return lastDevices;
 	}
 
 	public ArrayList<String> getARPTargetDevices() {
-		if(!arpspoof.isSet()) {
+		if (!arpspoof.isSet()) {
 			arpspoof.initArpSpoofing();
 		}
 		ArrayList<String> devices = new ArrayList<>();
-		
-		for(Device d : this.devices) {
+
+		for (Device d : this.devices) {
 			devices.add(d.getNickName());
 		}
-		
+
 		return devices;
+	}
+	
+	public void closeNetworkCard() {
+		Main.gui.appendLog("Close device '" + Utils.getName(device) + "'.");
+		pcap.close();
+		pcap = null;
 	}
 
 	public boolean selectNetworkCard(int index) {
@@ -122,9 +153,9 @@ public class NetworkManager {
 			return false;
 		}
 		if (pcap != null) {
+			System.out.println("blabla");
 			Main.gui.appendLog("Already another device is opened.");
-			Main.gui.appendLog("Close device '" + Utils.getName(device) + "'.");
-			pcap.close();
+			closeNetworkCard();
 		}
 		StringBuilder err = new StringBuilder();
 
@@ -139,13 +170,13 @@ public class NetworkManager {
 		}
 
 		pCaptureThread.start();
-		
+
 		Main.gui.appendLog("Success select network card! : " + Utils.getName(device));
 		return true;
 	}
 
 	public void dispatchPacket(AbstractPacket abp) {
-		if(abp instanceof ARPPacket) {
+		if (abp instanceof ARPPacket) {
 			arpspoof.responseARPReply((ARPPacket) abp);
 		}
 	}
