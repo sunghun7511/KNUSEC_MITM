@@ -70,6 +70,9 @@ public class MainGUIApplication extends Application {
 
 			primaryStage.setTitle("MITM Attack");
 			primaryStage.setScene(new Scene(root));
+			
+			primaryStage.setOnCloseRequest(e -> System.exit(0));
+			
 			primaryStage.show();
 		} catch (Exception e) {
 			e.printStackTrace();

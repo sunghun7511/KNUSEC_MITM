@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.ResourceBundle;
 
+import javax.swing.JButton;
+import javax.swing.SwingUtilities;
+
 import com.SHGroup.mitm.Main;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXListView;
@@ -43,6 +46,7 @@ public class SceneController implements Initializable {
 	private JFXButton arp_spoofing;
 
 	private ObservableList<String> listItems = FXCollections.observableArrayList();
+	private GraphPanel gPanel;
 
 	private boolean applyListItems() {
 		if (listItems == null) {
@@ -67,6 +71,12 @@ public class SceneController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		Main.gui.setController(this);
+		SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+            	graphPane.setContent(gPanel = new GraphPanel());
+            }
+        });
 
 		listview.setOnMouseClicked(new EventHandler<MouseEvent>() {
 			@Override
@@ -125,23 +135,27 @@ public class SceneController implements Initializable {
 			@Override
 			public void run() {
 				templist = Main.network.getNetworkDevices();
-				if(Main.network.getPcap() != null)
+				if (Main.network.getPcap() != null)
 					Main.network.closeNetworkCard();
+				System.out.println("now, update list");
 				Main.runOnGUIThread(new Runnable() {
 					@Override
 					public void run() {
+						System.out.println("hello../");
 						listItems.clear();
-						
+
 						for (String n : templist) {
 							listItems.add(n);
 						}
-						
+
 						applyListItems();
 						mode = 0;
-						
+
 						network_devices.setDisable(false);
 						arp_spoofing.setDisable(false);
 						listview.setDisable(false);
+
+						System.out.println("haha, finished");
 					}
 				});
 			}
@@ -163,14 +177,14 @@ public class SceneController implements Initializable {
 						@Override
 						public void run() {
 							listItems.clear();
-		
+
 							for (String n : templist) {
 								listItems.add(n);
 							}
-							
+
 							applyListItems();
 							mode = 1;
-							
+
 							network_devices.setDisable(false);
 							arp_spoofing.setDisable(false);
 							listview.setDisable(false);
@@ -180,7 +194,7 @@ public class SceneController implements Initializable {
 			});
 		} else {
 			Main.gui.appendLog("Please select network device first..");
-			
+
 			network_devices.setDisable(false);
 			arp_spoofing.setDisable(false);
 			listview.setDisable(false);

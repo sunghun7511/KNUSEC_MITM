@@ -106,6 +106,7 @@ public class NetworkManager {
 		ArrayList<PcapIf> allDevices = new ArrayList<>();
 		StringBuilder err = new StringBuilder();
 
+		System.out.println("load_All");
 		int res = Pcap.findAllDevs(allDevices, err);
 		if (res == Pcap.NOT_OK || allDevices.isEmpty()) {
 			Main.gui.appendLog("Cannot loads network devices..");
@@ -113,7 +114,7 @@ public class NetworkManager {
 			return lastDevices;
 		}
 		lastDevices = new ArrayList<>();
-
+		System.out.println("load_All");
 		Main.gui.appendLog("Find " + allDevices.size() + " devices.");
 		for (int i = 0; i < allDevices.size(); i++) {
 			PcapIf pci = allDevices.get(i);
@@ -133,7 +134,10 @@ public class NetworkManager {
 			arpspoof.initArpSpoofing();
 		}
 		ArrayList<String> devices = new ArrayList<>();
-
+		
+		Device rout = arpspoof.getRouter();
+		devices.add(rout == null ? "게이트웨이 : 없음" : "게이트웨이 : " + rout.getNickName());
+		
 		for (Device d : this.devices) {
 			devices.add(d.getNickName());
 		}
@@ -158,7 +162,7 @@ public class NetworkManager {
 			closeNetworkCard();
 		}
 		StringBuilder err = new StringBuilder();
-
+		
 		device = allDevices.get(index);
 		pcap = Pcap.openLive(device.getName(), 64 * 1024, Pcap.MODE_PROMISCUOUS, 1000, err);
 
