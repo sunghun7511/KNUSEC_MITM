@@ -1,12 +1,12 @@
 package com.SHGroup.mitm.gui;
 
+import java.awt.Dimension;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.ResourceBundle;
 
-import javax.swing.JButton;
 import javax.swing.SwingUtilities;
 
 import com.SHGroup.mitm.Main;
@@ -72,11 +72,21 @@ public class SceneController implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		Main.gui.setController(this);
 		SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-            	graphPane.setContent(gPanel = new GraphPanel());
-            }
-        });
+			@Override
+			public void run() {
+				gPanel = new GraphPanel();
+				gPanel.setPreferredSize(new Dimension(1038, 548));
+
+				graphPane.setLayoutX(241);
+				graphPane.setLayoutY(1);
+
+				graphPane.setContent(gPanel);
+				
+				while(true) {
+					gPanel.repaint();
+				}
+			}
+		});
 
 		listview.setOnMouseClicked(new EventHandler<MouseEvent>() {
 			@Override
@@ -95,7 +105,11 @@ public class SceneController implements Initializable {
 								Main.network.selectNetworkCard(select.get(0));
 								Main.gui.getController().loadARPTargetDevices();
 							} else if (mode == 1) {
-								
+								if (select.get(0) == 0) {
+									Main.gui.appendLog("게이트웨이는 자동으로 스푸핑됩니다.");
+								}else {
+									Main.network.addTarget(select.get(0));
+								}
 							}
 							listview.setDisable(false);
 						}
@@ -137,11 +151,10 @@ public class SceneController implements Initializable {
 				templist = Main.network.getNetworkDevices();
 				if (Main.network.getPcap() != null)
 					Main.network.closeNetworkCard();
-				System.out.println("now, update list");
 				Main.runOnGUIThread(new Runnable() {
 					@Override
 					public void run() {
-						System.out.println("hello../");
+						System.out.println("update list..");
 						listItems.clear();
 
 						for (String n : templist) {
@@ -154,12 +167,14 @@ public class SceneController implements Initializable {
 						network_devices.setDisable(false);
 						arp_spoofing.setDisable(false);
 						listview.setDisable(false);
-
-						System.out.println("haha, finished");
 					}
 				});
 			}
 		});
+	}
+
+	public GraphPanel getGraphPanel() {
+		return gPanel;
 	}
 
 	public void loadARPTargetDevices() {

@@ -18,6 +18,17 @@ public class Utils {
 	public final static String getIPandMACToString(byte[] ip, byte[] mac) {
 		return IPToString(ip) + "(" + bytesToString(mac) + ")";
 	}
+	
+	public final static boolean byteArrayEquals(byte[] b1, byte[] b2) {
+		if(b1.length != b2.length) {
+			return false;
+		}
+		for(int i = 0 ; i < b1.length ; i ++) {
+			if(b1[i] != b2[i])
+				return false;
+		}
+		return true;
+	}
 
 	public final static String bytesToString(byte[] arr, int linefeed) {
 		StringBuilder builder = new StringBuilder();
@@ -37,10 +48,7 @@ public class Utils {
 	}
 
 	public final static int copy(byte[] src, byte[] dest) {
-		if (src.length > dest.length) {
-			return 0;
-		}
-		return copy(src, 0, dest, 0, dest.length);
+		return copy(src, 0, dest, 0, Math.min(dest.length, src.length));
 	}
 	
 	public final static int copy(byte[] src, int srcstart, byte[] dest, int deststart) {

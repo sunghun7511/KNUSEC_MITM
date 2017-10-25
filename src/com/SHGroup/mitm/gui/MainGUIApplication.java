@@ -78,6 +78,11 @@ public class MainGUIApplication extends Application {
 			e.printStackTrace();
 		}
 	}
+	
+	public void updateGraph() {
+		while(getController() == null) {}
+		getController().getGraphPanel().update();
+	}
 
 	public void appendLog(Object o) {
 		while(getController() == null) {}

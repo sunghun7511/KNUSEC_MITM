@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import org.jnetpcap.Pcap;
 import org.jnetpcap.PcapIf;
+import org.jnetpcap.packet.PcapPacket;
 
 import com.SHGroup.mitm.Main;
 import com.SHGroup.mitm.Utils;
@@ -64,7 +65,7 @@ public class NetworkManager {
 	public Device getDeviceFromIP(byte[] ip) {
 		Device d = null;
 		for (Device dd : devices) {
-			if (Utils.bytesToString(dd.getIP()).equals(Utils.bytesToString(ip))) {
+			if (Utils.byteArrayEquals(dd.getIP(), ip)) {
 				d = dd;
 				break;
 			}
@@ -75,7 +76,7 @@ public class NetworkManager {
 	public Device getDeviceFromMac(byte[] mac) {
 		Device d = null;
 		for (Device dd : devices) {
-			if (Utils.bytesToString(dd.getMac()).equals(Utils.bytesToString(mac))) {
+			if (Utils.byteArrayEquals(dd.getMac(), mac)) {
 				d = dd;
 				break;
 			}
@@ -105,8 +106,7 @@ public class NetworkManager {
 	public ArrayList<String> getNetworkDevices() {
 		ArrayList<PcapIf> allDevices = new ArrayList<>();
 		StringBuilder err = new StringBuilder();
-
-		System.out.println("load_All");
+		
 		int res = Pcap.findAllDevs(allDevices, err);
 		if (res == Pcap.NOT_OK || allDevices.isEmpty()) {
 			Main.gui.appendLog("Cannot loads network devices..");
@@ -151,6 +151,17 @@ public class NetworkManager {
 		pcap = null;
 	}
 
+	public boolean addTarget(int index) {
+		index -= 1;
+		if (index < 0 || index >= devices.size()) {
+			Main.gui.appendLog("Error while arpspoof : " + index + " is not invalid index.");
+			return false;
+		}
+		Device d = devices.get(index);
+		arpspoof.addTarget(d);
+		return true;
+	}
+
 	public boolean selectNetworkCard(int index) {
 		if (index < 0 || index >= allDevices.size()) {
 			Main.gui.appendLog("Error while select network card : " + index + " is not invalid index.");
@@ -183,5 +194,9 @@ public class NetworkManager {
 		if (abp instanceof ARPPacket) {
 			arpspoof.responseARPReply((ARPPacket) abp);
 		}
+	}
+
+	public void broadcastDispatchPacket(PcapPacket packet, byte[] data) {
+		arpspoof.route(packet, data);
 	}
 }
