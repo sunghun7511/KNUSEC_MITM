@@ -14,9 +14,15 @@ import com.SHGroup.mitm.networking.packets.PacketType;
 public class PacketCaptureThread extends Thread{
 	
 	private boolean exit = false;
+	private boolean start = false;
+	
+	public boolean isStarted() {
+		return start;
+	}
 	
 	@Override
 	public void run() {
+		start = true;
 		while(!exit) {
 			try {
 				if(Main.network.getPcap() != null) {

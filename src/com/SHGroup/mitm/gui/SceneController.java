@@ -1,6 +1,5 @@
 package com.SHGroup.mitm.gui;
 
-import java.awt.Dimension;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -17,7 +16,6 @@ import com.jfoenix.controls.JFXTextField;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.embed.swing.SwingNode;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -37,16 +35,13 @@ public class SceneController implements Initializable {
 	private JFXTextField consoleInput;
 
 	@FXML
-	public SwingNode graphPane;
-
-	@FXML
 	private JFXButton network_devices;
 
 	@FXML
 	private JFXButton arp_spoofing;
 
 	private ObservableList<String> listItems = FXCollections.observableArrayList();
-	private GraphPanel gPanel;
+	private GraphManager graph;
 
 	private boolean applyListItems() {
 		if (listItems == null) {
@@ -74,17 +69,7 @@ public class SceneController implements Initializable {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				gPanel = new GraphPanel();
-				gPanel.setPreferredSize(new Dimension(1038, 548));
-
-				graphPane.setLayoutX(241);
-				graphPane.setLayoutY(1);
-
-				graphPane.setContent(gPanel);
-				
-				while(true) {
-					gPanel.repaint();
-				}
+				graph = new GraphManager();
 			}
 		});
 
@@ -107,6 +92,7 @@ public class SceneController implements Initializable {
 							} else if (mode == 1) {
 								if (select.get(0) == 0) {
 									Main.gui.appendLog("게이트웨이는 자동으로 스푸핑됩니다.");
+									graph.update();
 								}else {
 									Main.network.addTarget(select.get(0));
 								}
@@ -129,6 +115,27 @@ public class SceneController implements Initializable {
 		});
 
 		loadNetworkDevices();
+		
+		Thread t = new Thread() {
+			@Override
+			public void run() {
+				while(true) {
+					SwingUtilities.invokeLater(new Runnable() {
+						@Override
+						public void run() {
+							graph.update();
+						}
+					});
+					try {
+						Thread.sleep(100l);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		};
+		t.setDaemon(true);
+		t.start();
 	}
 
 	private int mode = 0;
@@ -173,8 +180,8 @@ public class SceneController implements Initializable {
 		});
 	}
 
-	public GraphPanel getGraphPanel() {
-		return gPanel;
+	public GraphManager getGraphManager() {
+		return graph;
 	}
 
 	public void loadARPTargetDevices() {

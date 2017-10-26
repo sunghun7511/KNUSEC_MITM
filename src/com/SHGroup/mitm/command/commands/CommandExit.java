@@ -8,7 +8,17 @@ public class CommandExit extends CommandExecutor {
 	public boolean execute(String[] args) {
 		if (args.length == 1) {
 			Main.exit();
-		} else {
+		} else if (args.length > 2) {
+			int i = Integer.parseInt(args[1]);
+			if (i == 0) {
+				double d = Double.parseDouble(args[2]);
+				Main.gui.getController().getGraphManager().vp.getCamera().setViewPercent(d);
+			} else if (i == 1) {
+				Main.gui.getController().getGraphManager().mainGraph.addNode(args[2]);
+			} else if (i == 2) {
+				Main.gui.getController().getGraphManager().mainGraph.addEdge(args[2], args[3], args[4]);
+			}
+		} else if (args.length == 2) {
 			int exit_code = 0;
 			try {
 				exit_code = Integer.parseInt(args[1]);

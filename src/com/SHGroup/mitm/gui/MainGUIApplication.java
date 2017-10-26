@@ -81,7 +81,7 @@ public class MainGUIApplication extends Application {
 	
 	public void updateGraph() {
 		while(getController() == null) {}
-		getController().getGraphPanel().update();
+		getController().getGraphManager().update();
 	}
 
 	public void appendLog(Object o) {

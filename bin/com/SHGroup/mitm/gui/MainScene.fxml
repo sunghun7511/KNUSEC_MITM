@@ -28,18 +28,18 @@
 				</JFXListView>
 			</children>
 		</JFXScrollPane>
-		<JFXScrollPane layoutX="240.0" layoutY="550.0"
-			prefHeight="140.0" prefWidth="1040.0">
+		<JFXScrollPane layoutX="240.0" layoutY="0.0"
+			prefHeight="690.0" prefWidth="1040.0">
 			<children>
 				<JFXTextArea id="console" fx:id="consolePane" editable="false"
-					prefHeight="140.0" prefWidth="1040.0" />
+					prefHeight="690.0" prefWidth="1040.0" />
 			</children>
 		</JFXScrollPane>
 
 		<JFXTextField id="input" fx:id="consoleInput" layoutX="240.0"
 			layoutY="690.0" prefHeight="28.0" prefWidth="1040.0" />
 		
-		<SwingNode fx:id="graphPane" />
+		<!--<SwingNode fx:id="graphPane" />-->
 		
 		<JFXButton id="network_devices" fx:id="network_devices"
 			onAction="#loadNetworkDevices" layoutY="690.0" prefHeight="28.0"

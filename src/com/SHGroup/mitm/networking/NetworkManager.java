@@ -145,6 +145,10 @@ public class NetworkManager {
 		return devices;
 	}
 	
+	public ARPSpoofing getARPSpoofing() {
+		return arpspoof;
+	}
+	
 	public void closeNetworkCard() {
 		Main.gui.appendLog("Close device '" + Utils.getName(device) + "'.");
 		pcap.close();
@@ -184,7 +188,9 @@ public class NetworkManager {
 			return false;
 		}
 
-		pCaptureThread.start();
+		if(!pCaptureThread.isStarted()) {
+			pCaptureThread.start();
+		}
 
 		Main.gui.appendLog("Success select network card! : " + Utils.getName(device));
 		return true;
